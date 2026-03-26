@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import Set, Tuple
+from typing import List, Set, Tuple
 
 from git import Repo
+from pydantic import BaseModel
 from pystonic.utils import dateutil
 
 
@@ -33,17 +34,52 @@ def parse_date_range(date_range: Set[str]) -> Tuple[datetime, datetime]:
     raise ValueError("Invalid date range")
 
 
+class CommitStats(BaseModel):
+    author: str = ""
+    insertions: int = 0
+    deletions: int = 0
+    lines: int = 0
+    commits: int = 0
+
+
 def lines(since: datetime, until: datetime):
     repo = Repo()
-    commits_total: dict[str, Tuple[int, int, int, int]] = {}
+    commit_stats: dict[str, CommitStats] = {}
     for commit in repo.iter_commits(since=since, until=until):
         author = commit.author.name or commit.author.email or "Unknown"
         total = commit.stats.total
 
-        commits_total.setdefault(author, [0, 0, 0, 0])
-        commits_total[author][0] += total.get("insertions", 0)
-        commits_total[author][1] += total.get("deletions", 0)
-        commits_total[author][2] += total.get("lines", 0)
-        commits_total[author][3] += 1
+        commit_stats.setdefault(author, CommitStats(author=author))
 
-    return commits_total
+        commit_stats[author].insertions += total.get("insertions", 0)
+        commit_stats[author].deletions += total.get("deletions", 0)
+        commit_stats[author].lines += total.get("lines", 0)
+        commit_stats[author].commits += 1
+
+    return [x for x in commit_stats.values()]
+
+
+class CommitDetail(BaseModel):
+    author: str = ""
+    date: str = ""
+    message: str = ""
+    changes: List[str] = []
+
+
+def commits(since: datetime, until: datetime):
+    repo = Repo()
+    commit_details: List[CommitDetail] = []
+
+    for commit in repo.iter_commits(since=since, until=until):
+        author = commit.author.name or commit.author.email or "Unknown"
+        detail = CommitDetail(
+            author=author,
+            date=commit.authored_datetime.strftime(dateutil.FORMAT_DATETIME),
+            message=commit.message,
+        )
+        for item in commit.diff(commit.parents[0] if commit.parents else None):
+            detail.changes.append(f"{item.change_type} {item.a_path}")
+
+        commit_details.append(detail)
+
+    return commit_details

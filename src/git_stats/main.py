@@ -12,6 +12,7 @@ from git_stats.core import stats
 
 console = Console()
 
+
 def parse_date_range(date_range: Set[str]) -> Tuple[datetime, datetime]:
     """Parse date range"""
     if not date_range:
@@ -39,6 +40,7 @@ def parse_date_range(date_range: Set[str]) -> Tuple[datetime, datetime]:
 
     raise ValueError("Invalid date range")
 
+
 @click.group()
 def app():
     """Git Stats Tools"""
@@ -61,7 +63,7 @@ def lines(date_range: Set[str]):
     except ValueError:
         raise click.BadParameter("parse date range error")
 
-    commits_total = stats.lines(since, until)
+    commit_stats_list = stats.lines(since, until)
 
     console.print(
         f"{since:%Y-%m-%d %H:%M:%S} ~ {until:%Y-%m-%d %H:%M:%S}", style="cyan underline"
@@ -69,7 +71,7 @@ def lines(date_range: Set[str]):
     click.secho()
 
     table = Table(
-        Column("Author"),
+        Column("Author", justify="left"),
         Column("Added", justify="right"),
         Column("Removed", justify="right"),
         Column("Total", justify="right"),
@@ -77,13 +79,46 @@ def lines(date_range: Set[str]):
         title="Code lines",
         box=box.SIMPLE,
     )
-    for author, commit in commits_total.items():
+    for commit_stats in commit_stats_list:
         table.add_row(
-            author,
-            Text(str(commit[0]), style="green"),
-            Text(str(commit[1]), style="red"),
-            Text(str(commit[2]), style="magenta"),
-            str(commit[3]),
+            commit_stats.author,
+            Text(str(commit_stats.insertions), style="green"),
+            Text(str(commit_stats.deletions), style="red"),
+            Text(str(commit_stats.lines), style="magenta"),
+            str(commit_stats.commits),
+        )
+
+    console.print(table)
+
+
+@app.command()
+@click.argument("date_range", nargs=-1, default=[], required=False)
+def commits(date_range: Set[str]):
+    try:
+        since, until = parse_date_range(date_range)
+    except ValueError:
+        raise click.BadParameter("parse date range error")
+    commit_detail_list = stats.commits(since, until)
+
+    console.print(
+        f"{since:%Y-%m-%d %H:%M:%S} ~ {until:%Y-%m-%d %H:%M:%S}", style="cyan underline"
+    )
+    click.secho()
+
+    table = Table(
+        Column("Date"),
+        Column("Author", justify="left"),
+        Column("Message", justify="left"),
+        Column("Changes", justify="left", no_wrap=True),
+        title="Commit Details",
+        show_lines=True,
+    )
+    for item in commit_detail_list:
+        table.add_row(
+            item.date,
+            item.author,
+            Text(str(item.message), style="red" if "fix" in item.message else ""),
+            "\n".join(item.changes),
         )
 
     console.print(table)
