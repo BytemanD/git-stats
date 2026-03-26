@@ -124,9 +124,5 @@ def commits(date_range: Set[str]):
     console.print(table)
 
 
-def main() -> None:
-    app()
-
-
 if __name__ == "__main__":
-    main()
+    app()
