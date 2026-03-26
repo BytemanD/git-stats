@@ -53,9 +53,9 @@ def lines(date_range: Set[str]):
 
     \b
     e.g.
-        git-stats lines
-        git-stats lines <today | yesterday | thisweek | thismonth>
-        git-stats lines 2026-01-12 2026-01-22
+        git-rich-stats lines
+        git-rich-stats lines <today | yesterday | thisweek | thismonth>
+        git-rich-stats lines 2026-01-12 2026-01-22
         ...
     """
     try:
