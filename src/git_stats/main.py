@@ -2,15 +2,15 @@ from datetime import datetime
 from typing import Set, Tuple
 
 import click
-from git import Repo
 from pystonic.utils import dateutil
 from rich import box
 from rich.console import Console
 from rich.table import Column, Table
 from rich.text import Text
 
-console = Console()
+from git_stats.core import stats
 
+console = Console()
 
 def parse_date_range(date_range: Set[str]) -> Tuple[datetime, datetime]:
     """Parse date range"""
@@ -29,14 +29,15 @@ def parse_date_range(date_range: Set[str]) -> Tuple[datetime, datetime]:
             return dateutil.thismonth()
         if date_range[0] == "lastmonth":
             return dateutil.lastmonth()
-        return datetime.strptime(date_range[0], dateutil.FORMAT_DATETIME)
+        return datetime.strptime(
+            date_range[0], dateutil.FORMAT_DATETIME
+        ), datetime.now()
     elif len(date_range) == 2:
         return datetime.strptime(
             date_range[0], dateutil.FORMAT_DATETIME
         ), datetime.strptime(date_range[1], dateutil.FORMAT_DATETIME)
 
     raise ValueError("Invalid date range")
-
 
 @click.group()
 def app():
@@ -60,19 +61,11 @@ def lines(date_range: Set[str]):
     except ValueError:
         raise click.BadParameter("parse date range error")
 
-    repo = Repo()
-    commits_total: dict[str, Tuple[int, int, int, int]] = {}
-    for commit in repo.iter_commits(since=since, until=until):
-        author = commit.author.name or commit.author.email or "Unknown"
-        total = commit.stats.total
+    commits_total = stats.lines(since, until)
 
-        commits_total.setdefault(author, [0, 0, 0, 0])
-        commits_total[author][0] += total.get("insertions", 0)
-        commits_total[author][1] += total.get("deletions", 0)
-        commits_total[author][2] += total.get("lines", 0)
-        commits_total[author][3] += 1
-
-    console.print(f"{since:%Y-%m-%d %H:%M:%S} ~ {until:%Y-%m-%d %H:%M:%S}", style="cyan underline")
+    console.print(
+        f"{since:%Y-%m-%d %H:%M:%S} ~ {until:%Y-%m-%d %H:%M:%S}", style="cyan underline"
+    )
     click.secho()
 
     table = Table(
@@ -89,7 +82,7 @@ def lines(date_range: Set[str]):
             author,
             Text(str(commit[0]), style="green"),
             Text(str(commit[1]), style="red"),
-            str(commit[2]),
+            Text(str(commit[2]), style="magenta"),
             str(commit[3]),
         )
 
