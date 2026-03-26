@@ -1,6 +1,6 @@
 [project]
 name = "git-rich-stats"
-version = "0.1.0"
+version = "0.1.1"
 description = "A Git statistics tool with rich terminal output"
 readme = "README.md"
 authors = [
