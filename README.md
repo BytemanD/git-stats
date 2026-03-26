@@ -1,21 +1,21 @@
 # Git Rich Stats
 
-A Git statistics tool with rich terminal output, built with Click and Rich.
+一款基于 Click 和 Rich 库构建的 Git 统计工具，提供丰富的终端输出。
 
-## Features
+## 功能特性
 
-- **Code Lines Stats**: View code additions, deletions, and commit counts per author
-- **Commit History**: Display commit details with changes
-- **Flexible Date Filtering**: Filter by today, this week, this month, or custom date ranges
-- **Beautiful Output**: Rich-formatted tables with colors and styling
+- **代码行数统计**：查看每位作者的代码增删行数和提交次数
+- **提交历史记录**：展示提交详情及变更内容
+- **灵活的日期筛选**：支持按今天、本周、本月或自定义日期范围筛选
+- **美观的输出格式**：使用 Rich 库实现彩色表格和样式输出
 
-## Installation
+## 安装
 
 ```bash
 pip install git-rich-stats
 ```
 
-Or install from source:
+或者从源码安装：
 
 ```bash
 git clone https://github.com/BytemanD/git-stats.git
@@ -23,55 +23,56 @@ cd git-stats
 pip install -e .
 ```
 
-## Usage
+## 使用方法
 
-### Code Lines
+### 代码行数统计
 
 ```bash
 git-rich-stats lines [OPTIONS] [DATE_RANGE]...
 
-# Examples:
-git-rich-stats lines                    # Today's stats
-git-rich-stats lines today              # Today's stats
-git-rich-stats lines yesterday          # Yesterday's stats
-git-rich-stats lines thisweek           # This week's stats
-git-rich-stats lines lastweek           # Last week's stats
-git-rich-stats lines thismonth           # This month's stats
-git-rich-stats lines lastmonth          # Last month's stats
-git-rich-stats lines 2026-01-12 2026-01-22  # Custom date range
+# 示例：
+git-rich-stats lines                    # 今日统计
+git-rich-stats lines today             # 今日统计
+git-rich-stats lines yesterday          # 昨日统计
+git-rich-stats lines thisweek          # 本周统计
+git-rich-stats lines lastweek          # 上周统计
+git-rich-stats lines thismonth          # 本月统计
+git-rich-stats lines lastmonth         # 上月统计
+git-rich-stats lines 2026-01-12 2026-01-22  # 自定义日期范围
 ```
 
-### Commit History
+### 提交历史记录
 
 ```bash
 git-rich-stats commits [OPTIONS] [DATE_RANGE]...
 
-# Examples:
-git-rich-stats commits today            # Today's commits
-git-rich-stats commits thisweek         # This week's commits
-git-rich-stats commits 2026-01-12 2026-01-22  # Custom date range
+# 示例：
+git-rich-stats commits today            # 今日提交
+git-rich-stats commits thisweek         # 本周提交
+git-rich-stats commits 2026-01-12 2026-01-22  # 自定义日期范围
 ```
 
-## Output Example
+## 输出示例
 
-### Lines Command
+### lines 命令
 
 ```
 2026-03-27 00:00:00 ~ 2026-03-27 23:59:59
 
             Code lines
 
- Author    Added  Removed   Total  Commits
-──────────────────────────────────────────
+ Author    Added  Removed   Total   Commits
+ ──────────────────────────────────────────
  John Doe    150       30     180        5
  Jane         80       15      95        3
 ```
 
-### Commits Command
+### commits 命令
 
+```
 2026-03-27 00:00:00 ~ 2026-03-27 23:59:59
 
-                Commit Details
+                Commit Details  
 ┏━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┓
 ┃ Date             ┃ Author   ┃ Message                  ┃ Changes        ┃
 ┡━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━┩
@@ -80,7 +81,7 @@ git-rich-stats commits 2026-01-12 2026-01-22  # Custom date range
 └──────────────────┴──────────┴──────────────────────────┴────────────────┘
 ```
 
-## Requirements
+## 环境要求
 
 - Python >= 3.10
 - click >= 8.3.1
@@ -88,6 +89,6 @@ git-rich-stats commits 2026-01-12 2026-01-22  # Custom date range
 - pystonic >= 0.1.7
 - rich >= 14.3.3
 
-## License
+## 开源协议
 
 MIT
