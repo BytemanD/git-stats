@@ -8,7 +8,7 @@ from rich.console import Console
 from rich.table import Column, Table
 from rich.text import Text
 
-from git_stats.core import stats
+from git_rich_stats.core import stats
 
 console = Console()
 
@@ -49,7 +49,7 @@ def app():
 @app.command()
 @click.argument("date_range", nargs=-1, default=[], required=False)
 def lines(date_range: Set[str]):
-    """Count lines
+    """Show commit lines
 
     \b
     e.g.
@@ -94,6 +94,7 @@ def lines(date_range: Set[str]):
 @app.command()
 @click.argument("date_range", nargs=-1, default=[], required=False)
 def commits(date_range: Set[str]):
+    """Show commits"""
     try:
         since, until = parse_date_range(date_range)
     except ValueError:

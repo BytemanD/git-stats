@@ -1,5 +1,5 @@
 [project]
-name = "git-stats"
+name = "git-rich-stats"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-git-stats = "git_stats.cmd.main:app"
+git-rich-stats = "git_rich_stats.cmd.main:app"
 
 [build-system]
 requires = ["uv_build>=0.10.8,<0.11.0"]
