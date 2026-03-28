@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import Set, Tuple
+from typing import Tuple
 
 import click
+from git import Optional
 from pystonic.utils import dateutil
 from rich import box
 from rich.console import Console
@@ -13,7 +14,7 @@ from git_rich_stats.core import stats
 console = Console()
 
 
-def parse_date_range(date_range: Set[str]) -> Tuple[datetime, datetime]:
+def parse_date_range(date_range: Tuple[str]) -> Tuple[datetime, datetime]:
     """Parse date range"""
     if not date_range:
         return dateutil.thisday()
@@ -48,7 +49,19 @@ def app():
 
 @app.command()
 @click.argument("date_range", nargs=-1, default=[], required=False)
-def lines(date_range: Set[str]):
+@click.option(
+    "-s",
+    "--sort-by",
+    type=click.Choice(["total", "added", "removed", "commits"]),
+    default="total",
+    help="Sort by lines",
+)
+@click.option(
+    "--no-sort",
+    is_flag=True,
+    help="Do not sort the results",
+)
+def lines(date_range: Tuple[str], sort_by: str="total", no_sort: bool = False):
     """Show commit lines
 
     \b
@@ -63,13 +76,13 @@ def lines(date_range: Set[str]):
     except ValueError:
         raise click.BadParameter("parse date range error")
 
-    commit_stats_list = stats.lines(since, until)
-
     console.print(
         f"{since:%Y-%m-%d %H:%M:%S} ~ {until:%Y-%m-%d %H:%M:%S}", style="cyan underline"
     )
     click.secho()
-
+    commit_stats_list = stats.lines(since, until)
+    if not no_sort:
+        commit_stats_list.sort(key=lambda x: getattr(x, sort_by))
     table = Table(
         Column("Author", justify="left"),
         Column("Added", justify="right"),
@@ -79,12 +92,13 @@ def lines(date_range: Set[str]):
         title="Code lines",
         box=box.SIMPLE,
     )
+
     for commit_stats in commit_stats_list:
         table.add_row(
             commit_stats.author,
-            Text(str(commit_stats.insertions), style="green"),
-            Text(str(commit_stats.deletions), style="red"),
-            Text(str(commit_stats.lines), style="magenta"),
+            Text(str(commit_stats.added), style="green"),
+            Text(str(commit_stats.removed), style="red"),
+            Text(str(commit_stats.total), style="magenta"),
             str(commit_stats.commits),
         )
 
@@ -93,7 +107,7 @@ def lines(date_range: Set[str]):
 
 @app.command()
 @click.argument("date_range", nargs=-1, default=[], required=False)
-def commits(date_range: Set[str]):
+def commits(date_range: Tuple[str]):
     """Show commits"""
     try:
         since, until = parse_date_range(date_range)

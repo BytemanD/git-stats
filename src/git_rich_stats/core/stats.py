@@ -1,12 +1,12 @@
 from datetime import datetime
-from typing import List, Set, Tuple
+from typing import List, Tuple
 
-from git import Repo
+from git import Repo, Commit
 from pydantic import BaseModel
 from pystonic.utils import dateutil
 
 
-def parse_date_range(date_range: Set[str]) -> Tuple[datetime, datetime]:
+def parse_date_range(date_range: Tuple[str]) -> Tuple[datetime, datetime]:
     """Parse date range"""
     if not date_range:
         return dateutil.thisday()
@@ -36,10 +36,33 @@ def parse_date_range(date_range: Set[str]) -> Tuple[datetime, datetime]:
 
 class CommitStats(BaseModel):
     author: str = ""
-    insertions: int = 0
-    deletions: int = 0
-    lines: int = 0
+    added: int = 0
+    removed: int = 0
+    total: int = 0
     commits: int = 0
+
+
+class CommitDetail(BaseModel):
+    author: str = ""
+    date: str = ""
+    message: str = ""
+    changes: List[str] = []
+
+    @classmethod
+    def from_git_commit(cls, commit: Commit):
+        return cls(
+            author=commit.author.name or commit.author.email or "Unknown",
+            date=commit.authored_datetime.strftime(dateutil.FORMAT_DATETIME),
+            message=(
+                commit.message.decode("utf-8")
+                if isinstance(commit.message, bytes)
+                else str(commit.message)
+            ),
+            changes=[
+                f"{x.change_type} {x.a_path}"
+                for x in commit.diff(commit.parents[0] if commit.parents else None)
+            ],
+        )
 
 
 def lines(since: datetime, until: datetime):
@@ -51,35 +74,17 @@ def lines(since: datetime, until: datetime):
 
         commit_stats.setdefault(author, CommitStats(author=author))
 
-        commit_stats[author].insertions += total.get("insertions", 0)
-        commit_stats[author].deletions += total.get("deletions", 0)
-        commit_stats[author].lines += total.get("lines", 0)
+        commit_stats[author].added += total.get("insertions", 0)
+        commit_stats[author].removed += total.get("deletions", 0)
+        commit_stats[author].total += total.get("lines", 0)
         commit_stats[author].commits += 1
 
     return [x for x in commit_stats.values()]
 
 
-class CommitDetail(BaseModel):
-    author: str = ""
-    date: str = ""
-    message: str = ""
-    changes: List[str] = []
-
-
 def commits(since: datetime, until: datetime):
     repo = Repo()
-    commit_details: List[CommitDetail] = []
-
-    for commit in repo.iter_commits(since=since, until=until):
-        author = commit.author.name or commit.author.email or "Unknown"
-        detail = CommitDetail(
-            author=author,
-            date=commit.authored_datetime.strftime(dateutil.FORMAT_DATETIME),
-            message=commit.message,
-        )
-        for item in commit.diff(commit.parents[0] if commit.parents else None):
-            detail.changes.append(f"{item.change_type} {item.a_path}")
-
-        commit_details.append(detail)
-
-    return commit_details
+    return [
+        CommitDetail.from_git_commit(commit)
+        for commit in repo.iter_commits(since=since, until=until)
+    ]
